@@ -11,8 +11,8 @@ import jwt
 from flask import Flask, jsonify, request, abort
 
 
-JWT_SECRET = os.environ.get('JWT_SECRET', 'abc123abc1234')
-LOG_LEVEL = os.environ.get('LOG_LEVEL', 'INFO')
+JWT_SECRET = os.environ.get('JWT_SECRET','random_secret') 
+LOG_LEVEL = os.environ.get('LOG_LEVEL', 'INFO') 
 
 
 def _logger():
@@ -79,7 +79,7 @@ def auth():
 
     user_data = body
 
-    return jsonify(token=_get_jwt(user_data).decode('utf-8'))
+    return jsonify(token=_get_jwt(user_data)) #.decode('utf-8')
 
 
 @APP.route('/contents', methods=['GET'])
@@ -108,6 +108,7 @@ def _get_jwt(user_data):
     payload = {'exp': exp_time,
                'nbf': datetime.datetime.utcnow(),
                'email': user_data['email']}
+    
     return jwt.encode(payload, JWT_SECRET, algorithm='HS256')
 
 if __name__ == '__main__':
