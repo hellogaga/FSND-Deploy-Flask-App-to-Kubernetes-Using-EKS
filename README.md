@@ -24,19 +24,6 @@ The app relies on a secret set as the environment variable `JWT_SECRET` to produ
  - AWS Account
      - You can create an AWS account by signing up [here](https://aws.amazon.com/#).
      
-## Project Steps
-
-Completing the project involves several steps:
-
-1. Write a Dockerfile for a simple Flask API
-2. Build and test the container locally
-3. Create an EKS cluster
-4. Store a secret using AWS Parameter Store
-5. Create a CodePipeline pipeline triggered by GitHub checkins
-6. Create a CodeBuild stage which will build, test, and deploy your code
-
-For more detail about each of these steps, see the project lesson [here](https://classroom.udacity.com/nanodegrees/nd004/parts/1d842ebf-5b10-4749-9e5e-ef28fe98f173/modules/ac13842f-c841-4c1a-b284-b47899f4613d/lessons/becb2dac-c108-4143-8f6c-11b30413e28d/concepts/092cdb35-28f7-4145-b6e6-6278b8dd7527).
-
 ## Run locally.
 ```cmd
 SET JWT_SECRET='random_secret_1'
@@ -73,7 +60,7 @@ eksctl create cluster --name simple-jwt-api
 ```
 
 ## Create a IAM Role
-arn:aws:iam::218700020755:role/UdacityFlaskDeployCBKubectlRole
+`arn:aws:iam::111111111111:role/UdacityFlaskDeployCBKubectlRole`
 
 ## Grant the Role Access to the Cluster
 The 'aws-auth ConfigMap' is used to grant role-based access control to your cluster. When your cluster is first created, the user who created it is given sole permission to administer it. You need to add the role you just created so that CodeBuild can administer it as well. Get the current configmap and save it to a file:
@@ -121,6 +108,11 @@ Get the api endpoints.
 ```
 kubectl get services simple-jwt-api -o wide
 ```
+```
+NAME             TYPE           CLUSTER-IP      EXTERNAL-IP                                                                PORT(S)        AGE     SELECTOR
+simple-jwt-api   LoadBalancer   10.100.16.200   af4d4703de6bc46e49f9ac1ad5b7ebec-1299799129.eu-north-1.elb.amazonaws.com   80:31646/TCP   4h57m   app=simple-jwt-api
+```
+
 Post a email and password to api
 ```
 curl -H "Content-Type:application/json" -d "{\"email\":\"hello@hello.com\",\"password\":\"123456\"}" -X POST af4d4703de6bc46e49f9ac1ad5b7ebec-1299799129.eu-north-1.elb.amazonaws.com/auth
