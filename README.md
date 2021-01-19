@@ -76,13 +76,55 @@ eksctl create cluster --name simple-jwt-api
 arn:aws:iam::218700020755:role/UdacityFlaskDeployCBKubectlRole
 
 ## Grant the Role Access to the Cluster
-1. The 'aws-auth ConfigMap' is used to grant role-based access control to your cluster. When your cluster is first created, the user who created it is given sole permission to administer it. You need to add the role you just created so that CodeBuild can administer it as well. Get the current configmap and save it to a file:
+The 'aws-auth ConfigMap' is used to grant role-based access control to your cluster. When your cluster is first created, the user who created it is given sole permission to administer it. You need to add the role you just created so that CodeBuild can administer it as well. Get the current configmap and save it to a file:
 ```
 kubectl get -n kube-system configmap/aws-auth -o yaml > aws-auth-patch.yml
 ```
 
-1. Do not follow udacity. Following this [link](https://docs.aws.amazon.com/eks/latest/userguide/add-user-role.html). Just execute
+Do not follow udacity. Following this [link](https://docs.aws.amazon.com/eks/latest/userguide/add-user-role.html). Just execute
 ```
+kubectl describe configmap -n kube-system aws-auth
 kubectl edit -n kube-system configmap/aws-auth
 ```
-a txt editor will appear and you can edit the file there.
+a txt editor will appear and you can edit the file there.<br>
+The given tutorial might have problems. Use the following one to revise. 
+check [this].(https://github.com/jungleBadger/FSND-Deploy-Flask-App-to-Kubernetes-Using-EKS/blob/master/troubleshooting/deploy.md#step-4---create-an-additional-role-and-fetch-aws-auth-file)
+
+## Set a Secret using AWS Parameter Store
+1. add the following to your `buildspec.yml` file:
+```
+env:
+     parameter-store:         
+       JWT_SECRET: JWT_SECRET
+```
+2.  Put secret into AWS Parameter Store
+```
+aws ssm put-parameter --name JWT_SECRET --value "randomsecret" --type SecureString
+```
+3. when needed, can use the following to delete from parameter store
+```
+aws ssm delete-parameter --name JWT_SECRET
+```
+## Create a Cloudformation stack using template. 
+**Important**: The given template has some problems. The solution is given [here](https://github.com/jungleBadger/FSND-Deploy-Flask-App-to-Kubernetes-Using-EKS/blob/master/troubleshooting/codepipeline_creation_issue.md). To be more specific. Line 158 should be changed from:
+```
+headers = {'content-type': '', "content-length": len(response_body) }
+```
+ to: 
+ ```
+ headers = {'content-type': '', "content-length": str(len(response_body))}
+ ```
+
+
+## Test the built pipeline
+Get the api endpoints. 
+```
+kubectl get services simple-jwt-api -o wide
+```
+Post a email and password to api
+```
+curl -H "Content-Type:application/json" -d "{\"email\":\"hello@hello.com\",\"password\":\"123456\"}" -X POST af4d4703de6bc46e49f9ac1ad5b7ebec-1299799129.eu-north-1.elb.amazonaws.com/auth
+
+curl --request GET af4d4703de6bc46e49f9ac1ad5b7ebec-1299799129.eu-north-1.elb.amazonaws.com/contents -H "Authorization: Bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJleHAiOjE2MTIyOTMzNzMsIm5iZiI6MTYxMTA4Mzc3MywiZW1haWwiOiJoZWxsb0BoZWxsby5jb20ifQ.T-q8t50iDCpX52MKTHwzfzxhF0c1M49gluDXtdem8PY"
+```
+
